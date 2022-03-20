@@ -32,17 +32,17 @@ part_boundary = zeros(num_steps, 1); % number of particles that cross boundary
 %Current 
 current = zeros(num_steps, 1);
 
-%Temperatures
-temperatures = zeros(num_steps, 1);
-temperature_map = T*ones(width_silicon, length_silicon);
-
 %Silicon Dimensions
 length_silicon = 200;
 width_silicon = 100;
 silicon = zeros(width_silicon, length_silicon);
 
+%Temperatures
+temperatures = zeros(num_steps, 1);
+temperature_map = T*ones(width_silicon, length_silicon);
+
 %Potential, 1D
-V0 = 0.1 / 10^-9; %Converted to V/nm
+V0 = 0.1 / 10^-9;
 V_ai = Potential_1D(length_silicon, width_silicon,V0);
 
 %Electric Field

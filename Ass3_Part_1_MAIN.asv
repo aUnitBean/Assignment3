@@ -4,7 +4,7 @@ set(0, 'DefaultFigureWindowStyle', 'docked')
 close all
 
 %Duration of simulation
-num_steps = 200;
+num_steps = 500;
 
 %Silicon Temperature
 T = 300;
@@ -22,7 +22,7 @@ tau = 0.2 * 10 ^(-12);
 lambda = 3.74 * 10 ^(-8);
 
 %Time Step
-delta_t = tau/20;
+delta_t = tau/150;
 
 %Number of Particles
 num_part = 30000;
@@ -32,17 +32,17 @@ part_boundary = zeros(num_steps, 1); % number of particles that cross boundary
 %Current 
 current = zeros(num_steps, 1);
 
-%Temperatures
-temperatures = zeros(num_steps, 1);
-temperature_map = T*ones(width_silicon, length_silicon);
-
 %Silicon Dimensions
 length_silicon = 200;
 width_silicon = 100;
 silicon = zeros(width_silicon, length_silicon);
 
+%Temperatures
+temperatures = zeros(num_steps, 1);
+temperature_map = T*ones(width_silicon, length_silicon);
+
 %Potential, 1D
-V0 = 0.1 / 10^-9; %Converted to V/nm
+V0 =  / 10^-9; %Converted to V/nm
 V_ai = Potential_1D(length_silicon, width_silicon,V0);
 
 %Electric Field
@@ -66,7 +66,7 @@ part.velocity(:,2) = sin(part.phi) * v_Th;
 
 
 %particles are assigned x and y accelerations
-acceleration = mean(F, "all")/(C.mn*(10^-9));
+acceleration = mean(F, "all")/(C.mn*(10^-9))
 
 all_x_positions = zeros(num_part, num_steps);
 all_y_positions = zeros(num_part, num_steps);
@@ -117,9 +117,6 @@ for i = 1:num_steps
     all_y_positions(:,i) = part.position(:,2);    
 
 end
-
-
-
     %Every particle gets its own colour
     colours = jet(part_plot );
  
@@ -138,32 +135,32 @@ ElectronDensity (num_part, part, silicon, length_silicon, width_silicon)
 TemperatureMap (num_part, part, temperature_map, C);
 
 figure
-surface(V_ai'*(10^-9));
+surf(V_ai'*(10^-9));
 title('Potential, Finite Difference Matrix Solution, 1D')
 shading interp;
 xlabel('x (nm)') 
 ylabel('y (nm)') 
 zlabel('Potential, (V)')
 
-
-figure
-myTitle_Efield = sprintf('Electric Field Finite Difference Matrix Solution, 1D, E = %d V/nm', mean(Ey, 'all')*10^-9);
-surf(Ey);
-%surf(1 :width_silicon,1 :length_silicon, Ey','FaceColor','r');
-% zlim([9^6 10^7 ])
-xlabel('x (nm)') 
-ylabel('y (nm)') 
-zlabel('E-Field, (V/m)')
-title(myTitle_Efield)
-
-figure
-myTitle_Force= sprintf('Electric Force, Finite Difference Matrix Solution, 1D, F = %d N', mean(F, 'all'));
-surf(1 :width_silicon,1 :length_silicon, F,'FaceColor','b');
-zlim([ 0 10^-12])
-xlabel('x (nm)') 
-ylabel('y (nm)') 
-zlabel('E-Force, (N)')
-title(myTitle_Force)
+% 
+% figure
+% myTitle_Efield = sprintf('Electric Field Finite Difference Matrix Solution, 1D, E = %d V/nm', mean(Ey, 'all')*10^-9);
+% surf(Ey, 'FaceColor','r');
+% %surf(1 :width_silicon,1 :length_silicon, Ey','FaceColor','r');
+% % zlim([9^6 10^7 ])
+% xlabel('x (nm)') 
+% ylabel('y (nm)') 
+% zlabel('E-Field, (V/m)')
+% title(myTitle_Efield)
+% 
+% figure
+% myTitle_Force= sprintf('Electric Force, Finite Difference Matrix Solution, 1D, F = %d N', mean(F, 'all'));
+% surf(1 :width_silicon,1 :length_silicon, F,'FaceColor','b');
+% %zlim([ 0 10^-12])
+% xlabel('x (nm)') 
+% ylabel('y (nm)') 
+% zlabel('E-Force, (N)')
+% title(myTitle_Force)
 
 figure
 plot(delta_t * (1:num_steps), current)
