@@ -15,7 +15,11 @@ boundary_right = V0;
 d = 1;
 d2 = d^2;
 
+
 for n = 1:num_boxes
+if Box{n}.y(1) == 0
+   Box{n}.y(1) = 1;
+end
 cMap(Box{n}.x(1):Box{n}.x(2), Box{n}.y(1):Box{n}.y(2)) = (sigma_in); %Box positions of cMap assigned the desired internal sigma
 end
 

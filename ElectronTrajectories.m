@@ -1,5 +1,5 @@
 
-function [all_x_positions, all_y_positions] = ElectronTrajectories(E, Box, num_boxes, num_steps, width_silicon, length_silicon, num_part, C)
+function [all_x_positions, all_y_positions, part, aveCurrent] = ElectronTrajectories(E, Box, num_boxes, num_steps, width_silicon, length_silicon, num_part, C)
 
 part_plot = 10;
 %Silicon Temperature
@@ -12,6 +12,7 @@ tau = 0.2 * 10 ^(-12);
 
 %Time Step
 delta_t = tau/100;
+delta_time_step = 0;
 
 %Number of Particles
 % part_plot = 10; % number of particles to be plotted
@@ -68,8 +69,11 @@ all_y_positions = zeros(num_part, num_steps);
 all_x_positions(:,1) = part.position(:,1);
 all_y_positions(:,1) = part.position(:,2);
 
+%For collisions
+num_collisions = 0;
+part.collisions = zeros(num_part,1);
+duration = num_steps * delta_t;
 
-figure
 for i = 1:num_steps
 %   This is the live plot
 %     scatter(part.position(1:part_plot,1),part.position(1:part_plot,2), 'b');
@@ -91,6 +95,20 @@ for i = 1:num_steps
     
     
     for n = 1:num_part 
+        %Sattering
+        P_scat = 1-exp(-(delta_time_step*delta_t + delta_t)/tau);
+        delta_time_step = delta_time_step + 1;
+      
+        if (P_scat > 10*rand())
+            part.collisions (n) = part.collisions (n)+1;
+            delta_time_step = 0; %reset time step
+            %velocity reassigned
+            v = sqrt(part.velocity(n,1)^2+part.velocity(n,2)^2);
+            new_random_velocity =  v * randn(1,1) + v; 
+            new_random_phi = 2*pi* rand(); 
+            part.velocity(n,1) = cos(new_random_phi) * new_random_velocity;
+            part.velocity(n,2) = sin(new_random_phi) * new_random_velocity;
+        end
         %Checking Boundary Conditions
         if  part.position(n, 1) > length_silicon || part.position(n, 1) < 0
             if  part.position(n, 1) > length_silicon 
@@ -109,12 +127,7 @@ for i = 1:num_steps
        for b=1:num_boxes
            while part.position(n,1) > Box{b}.x (1) && part.position(n,1) < Box{b}.x (2) && part.position(n,2) > Box{b}.y (1) && part.position(n,2) < Box{b}.y (2)
               part.position (n,:) = part.position(n,:) - part.velocity(n,:) * delta_t;
-        %        if diffusive ~=0
-        %         new_random_velocity = v_Th/3 * randn(1,1) + v_Th; 
-        %         part.phi(n) = 2*pi* rand(); 
-        %         part.velocity(n,1) = cos(part.phi(n)) * new_random_velocity;
-        %         part.velocity(n,2) = sin(part.phi(n)) * new_random_velocity;
-        %       else
+      
                    if part.position (n,1) < Box{b}.x (1) || part.position(n,1) > Box{b}.x (2)
                       part.velocity(n,1) =-part.velocity(n,1) ;
                    end
@@ -127,9 +140,15 @@ for i = 1:num_steps
     end
     % I have arrays for storing all of the positions so I can plot them all
     % at the end
+
+    %Currents
+    current(i) = part_boundary(i) *C.q / delta_t;
+
     all_x_positions(:,i) = part.position(:,1);
     all_y_positions(:,i) = part.position(:,2);  
     part.aceleration = getAcceleration (part, acceleration, num_part, length_silicon, width_silicon);
 end
+
+aveCurrent = mean(current);
       
 end

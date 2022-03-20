@@ -4,7 +4,7 @@ set(0, 'DefaultFigureWindowStyle', 'docked')
 close all
 
 %Duration of simulation
-num_steps = 500;
+num_steps = 400;
 
 %Silicon Temperature
 T = 300;
@@ -22,7 +22,7 @@ tau = 0.2 * 10 ^(-12);
 lambda = 3.74 * 10 ^(-8);
 
 %Time Step
-delta_t = tau/150;
+delta_t = tau/100;
 
 %Number of Particles
 num_part = 30000;
@@ -42,7 +42,7 @@ temperatures = zeros(num_steps, 1);
 temperature_map = T*ones(width_silicon, length_silicon);
 
 %Potential, 1D
-V0 = 0.1 / 10^-9;
+V0 = 0.5 / 10^-9;
 V_ai = Potential_1D(length_silicon, width_silicon,V0);
 
 %Electric Field
@@ -66,12 +66,19 @@ part.velocity(:,2) = sin(part.phi) * v_Th;
 
 
 %particles are assigned x and y accelerations
-acceleration = mean(F, "all")/(C.mn*(10^-9))
+acceleration = mean(F, "all")/(C.mn*(10^-9));
 
 all_x_positions = zeros(num_part, num_steps);
 all_y_positions = zeros(num_part, num_steps);
 all_x_positions(:,1) = part.position(:,1);
 all_y_positions(:,1) = part.position(:,2);
+
+%For collisions
+num_collisions = 0;
+part.collisions = zeros(num_part,1);
+duration = num_steps * delta_t;
+delta_time_step = 0;
+
 
 myTitle = sprintf('Electron Trajectories in Silicon, Electric Field Present, E= %d V/nm', mean(Ey, "all")*10^-9);
 
@@ -91,8 +98,23 @@ for i = 1:num_steps
     %Position Updates
     part.position = part.position + part.velocity * delta_t;
     
-    %Checking Boundary Conditions
+
     for n = 1:num_part 
+        %Scattering
+        P_scat = 1-exp(-(delta_time_step*delta_t + delta_t)/tau);
+        delta_time_step = delta_time_step + 1;
+      
+        if (P_scat > 50*rand())
+            part.collisions (n) = part.collisions (n)+1;
+            delta_time_step = 0; %reset time step
+            %velocity reassigned
+            v = sqrt(part.velocity(n,1)^2+part.velocity(n,2)^2);
+            new_random_velocity =  v * randn(1,1) + v; 
+            new_random_phi = 2*pi* rand(); 
+            part.velocity(n,1) = cos(new_random_phi) * new_random_velocity;
+            part.velocity(n,2) = sin(new_random_phi) * new_random_velocity;
+        end
+            %Checking Boundary Conditions
         if  part.position(n, 1) > length_silicon || part.position(n, 1) < 0
             if  part.position(n, 1) > length_silicon 
             part.position (n, 1) =  part.position (n, 1) - length_silicon; 
@@ -118,13 +140,18 @@ for i = 1:num_steps
 
 end
     %Every particle gets its own colour
-    colours = jet(part_plot );
+    colours = jet(part_plot);
  
   %  This plots the linear trajectories of all the particles
     figure
-    for m =1:part_plot 
-    scatter(all_x_positions(m,:),all_y_positions(m,:),'.', 'color', colours(m))
-    hold on
+     for m = 1:part_plot 
+        scatter(all_x_positions(m,:),all_y_positions(m,:),'.', 'color', colours(m,:))
+        hold on
+         for i = 2:num_steps
+            if abs(all_x_positions(m,i-1) - all_x_positions(m,i)) < width_silicon
+            plot([all_x_positions(m,i-1) all_x_positions(m,i)],[all_y_positions(m,i-1) all_y_positions(m,i)],'color',  colours(m,:), 'LineWidth',3)
+            end
+        end
     end
     title(myTitle)
     axis([0 length_silicon 0 width_silicon])
